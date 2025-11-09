@@ -1,0 +1,71 @@
+BEGIN
+  EXECUTE IMMEDIATE 'DROP VIEW pune_employees';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE employee';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE department';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+CREATE TABLE department (
+  dept_id NUMBER PRIMARY KEY,
+  dept_name VARCHAR2(20)
+);
+
+CREATE TABLE employee (
+  emp_id NUMBER PRIMARY KEY,
+  name VARCHAR2(30),
+  dept_id NUMBER,
+  salary NUMBER,
+  city VARCHAR2(20),
+  FOREIGN KEY (dept_id) REFERENCES department(dept_id)
+);
+
+INSERT INTO department VALUES (1, 'IT');
+INSERT INTO department VALUES (2, 'HR');
+INSERT INTO department VALUES (3, 'Finance');
+
+INSERT INTO employee VALUES (101, 'Harshad', 1, 50000, 'Pune');
+INSERT INTO employee VALUES (102, 'Sneha', 2, 45000, 'Mumbai');
+INSERT INTO employee VALUES (103, 'Rohit', 1, 60000, 'Delhi');
+INSERT INTO employee VALUES (104, 'Priya', 3, 40000, 'Pune');
+INSERT INTO employee VALUES (105, 'Amit', NULL, 30000, 'Nagpur');
+
+SELECT e.name, d.dept_name
+FROM employee e INNER JOIN department d
+ON e.dept_id = d.dept_id;
+
+SELECT e.name, d.dept_name
+FROM employee e LEFT JOIN department d
+ON e.dept_id = d.dept_id;
+
+SELECT e.name, d.dept_name
+FROM employee e RIGHT JOIN department d
+ON e.dept_id = d.dept_id;
+
+SELECT e.name, d.dept_name
+FROM employee e FULL OUTER JOIN department d
+ON e.dept_id = d.dept_id;
+
+SELECT name, salary FROM employee
+WHERE salary > (SELECT AVG(salary) FROM employee);
+
+SELECT name FROM employee
+WHERE dept_id = (SELECT dept_id FROM department WHERE dept_name='IT');
+
+CREATE VIEW pune_employees AS
+SELECT name, dept_id, salary FROM employee WHERE city='Pune';
+
+SELECT * FROM pune_employees;
