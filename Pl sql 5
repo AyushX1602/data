@@ -1,29 +1,17 @@
--- clean up if already exists (safe drops)
-BEGIN
-  EXECUTE IMMEDIATE 'DROP TABLE Result';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-
 BEGIN
   EXECUTE IMMEDIATE 'DROP TABLE Stud_Marks';
-EXCEPTION WHEN OTHERS THEN NULL;
+EXCEPTION
+  WHEN OTHERS THEN NULL;
 END;
 /
 
 BEGIN
-  EXECUTE IMMEDIATE 'DROP FUNCTION fn_GetClass';
-EXCEPTION WHEN OTHERS THEN NULL;
+  EXECUTE IMMEDIATE 'DROP TABLE Result';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
 END;
 /
 
-BEGIN
-  EXECUTE IMMEDIATE 'DROP PROCEDURE proc_Grade';
-EXCEPTION WHEN OTHERS THEN NULL;
-END;
-/
-
--- Create tables
 CREATE TABLE Stud_Marks (
   Roll NUMBER PRIMARY KEY,
   Name VARCHAR2(30),
@@ -36,7 +24,6 @@ CREATE TABLE Result (
   Class VARCHAR2(30)
 );
 
--- Stored FUNCTION to return class based on marks
 CREATE OR REPLACE FUNCTION fn_GetClass(p_marks IN NUMBER) RETURN VARCHAR2 IS
   v_class VARCHAR2(30);
 BEGIN
@@ -53,7 +40,6 @@ BEGIN
 END;
 /
 
--- Stored PROCEDURE that uses the function and fills Result table
 CREATE OR REPLACE PROCEDURE proc_Grade IS
 BEGIN
   FOR rec IN (SELECT Roll, Name, Total_Marks FROM Stud_Marks) LOOP
@@ -64,19 +50,16 @@ BEGIN
 END;
 /
 
--- Sample data
 INSERT INTO Stud_Marks VALUES (1, 'Harshad', 1200);
 INSERT INTO Stud_Marks VALUES (2, 'Sneha', 940);
 INSERT INTO Stud_Marks VALUES (3, 'Rohit', 860);
 INSERT INTO Stud_Marks VALUES (4, 'Priya', 700);
 COMMIT;
 
--- Execute the procedure
 BEGIN
   proc_Grade;
 END;
 /
 
--- View results
 SET SERVEROUTPUT ON;
 SELECT * FROM Result ORDER BY Roll;
