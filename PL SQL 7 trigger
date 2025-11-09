@@ -1,0 +1,56 @@
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TRIGGER trg_Library_Audit';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE Library_Audit';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE Library';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+CREATE TABLE Library (
+    Book_ID NUMBER PRIMARY KEY,
+    Book_Name VARCHAR2(50),
+    Author VARCHAR2(50)
+);
+
+CREATE TABLE Library_Audit (
+    Book_ID NUMBER,
+    Book_Name VARCHAR2(50),
+    Author VARCHAR2(50),
+    Action_Type VARCHAR2(20),
+    Action_Date DATE
+);
+
+CREATE OR REPLACE TRIGGER trg_Library_Audit
+BEFORE UPDATE OR DELETE ON Library
+FOR EACH ROW
+BEGIN
+    IF UPDATING THEN
+        INSERT INTO Library_Audit
+        VALUES (:OLD.Book_ID, :OLD.Book_Name, :OLD.Author, 'UPDATED', SYSDATE);
+    ELSIF DELETING THEN
+        INSERT INTO Library_Audit
+        VALUES (:OLD.Book_ID, :OLD.Book_Name, :OLD.Author, 'DELETED', SYSDATE);
+    END IF;
+END;
+/
+
+INSERT INTO Library VALUES (1, 'DBMS', 'Navathe');
+INSERT INTO Library VALUES (2, 'OOP', 'Balagurusamy');
+
+UPDATE Library SET Author='Elmasri' WHERE Book_ID=1;
+DELETE FROM Library WHERE Book_ID=2;
+
+SELECT * FROM Library_Audit;
