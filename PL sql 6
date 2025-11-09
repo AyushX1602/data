@@ -1,0 +1,69 @@
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE O_RollCall';
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE N_RollCall';
+EXCEPTION WHEN OTHERS THEN NULL;
+END;
+/
+
+ 
+CREATE TABLE O_RollCall (
+  Roll_No NUMBER PRIMARY KEY,
+  Name VARCHAR2(30)
+);
+
+
+CREATE TABLE N_RollCall (
+  Roll_No NUMBER PRIMARY KEY,
+  Name VARCHAR2(30)
+);
+
+
+INSERT INTO O_RollCall VALUES (1, 'Harshad');
+INSERT INTO O_RollCall VALUES (2, 'Sneha');
+
+INSERT INTO N_RollCall VALUES (2, 'Sneha');
+INSERT INTO N_RollCall VALUES (3, 'Rohit');
+INSERT INTO N_RollCall VALUES (4, 'Priya');
+COMMIT;
+
+
+SET SERVEROUTPUT ON;
+DECLARE
+  CURSOR cur_merge(p_roll NUMBER) IS
+    SELECT Roll_No, Name
+    FROM N_RollCall
+    WHERE Roll_No = p_roll;
+
+  v_roll N_RollCall.Roll_No%TYPE;
+  v_name N_RollCall.Name%TYPE;
+  v_exists NUMBER;
+BEGIN
+  FOR rec IN (SELECT Roll_No FROM N_RollCall) LOOP
+    -- Check if record already exists in old table
+    SELECT COUNT(*) INTO v_exists
+    FROM O_RollCall
+    WHERE Roll_No = rec.Roll_No;
+
+    IF v_exists = 0 THEN
+      -- Open parameterized cursor for that roll number
+      OPEN cur_merge(rec.Roll_No);
+      FETCH cur_merge INTO v_roll, v_name;
+
+      INSERT INTO O_RollCall VALUES (v_roll, v_name);
+      DBMS_OUTPUT.PUT_LINE('Inserted Roll No: ' || v_roll || ', Name: ' || v_name);
+
+      CLOSE cur_merge;
+    ELSE
+      DBMS_OUTPUT.PUT_LINE('Skipped Roll No: ' || rec.Roll_No || ' (Already Exists)');
+    END IF;
+  END LOOP;
+  COMMIT;
+END;
+/
+
+SELECT * FROM O_RollCall ORDER BY Roll_No;
