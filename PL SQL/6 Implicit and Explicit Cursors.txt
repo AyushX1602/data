@@ -1,0 +1,95 @@
+
+-- DBMS ASSIGNMENT 6 — ORACLE PL/SQL (IMPLICIT AND EXPLICIT CURSORS) → MYSQL 8.0
+-- ------------------------------------------------------------------------------
+
+-- RESET TABLES
+BEGIN EXECUTE IMMEDIATE 'DROP TABLE O_RollCall'; EXCEPTION WHEN OTHERS THEN NULL; END;
+/
+BEGIN EXECUTE IMMEDIATE 'DROP TABLE N_RollCall'; EXCEPTION WHEN OTHERS THEN NULL; END;
+/
+
+-- CREATE TABLES
+CREATE TABLE O_RollCall(roll_no NUMBER, name VARCHAR2(30), attend CHAR(1));
+CREATE TABLE N_RollCall(roll_no NUMBER, name VARCHAR2(30), attend CHAR(1));
+
+-- SAMPLE DATA
+INSERT INTO O_RollCall VALUES (1,'Rohit','P');
+INSERT INTO O_RollCall VALUES (2,'Sneha','A');
+INSERT INTO N_RollCall VALUES (2,'Sneha','A');
+INSERT INTO N_RollCall VALUES (3,'Amit','P');
+COMMIT;
+
+SET SERVEROUTPUT ON;
+
+--------------------------------------------------------------
+-- SHORT PL/SQL BLOCK WITH ALL CURSOR TYPES
+--------------------------------------------------------------
+
+DECLARE
+  -- Parameterized Cursor
+  CURSOR c_merge(p_roll NUMBER) IS
+    SELECT roll_no, name, attend FROM N_RollCall WHERE roll_no = p_roll;
+
+  v_roll NUMBER;
+  v_name VARCHAR2(30);
+  v_att  CHAR(1);
+  v_cnt  NUMBER;   -- for checking existence
+BEGIN
+  --------------------------------------------------------------------
+  -- 1) Implicit Cursor
+  --------------------------------------------------------------------
+  UPDATE O_RollCall SET attend='P' WHERE attend='A';
+  DBMS_OUTPUT.PUT_LINE('Implicit Updated: '||SQL%ROWCOUNT);
+
+  --------------------------------------------------------------------
+  -- 2) Explicit Cursor
+  --------------------------------------------------------------------
+  DECLARE
+    CURSOR c_exp IS SELECT roll_no,name FROM O_RollCall;
+    r NUMBER; n VARCHAR2(30);
+  BEGIN
+    OPEN c_exp;
+    LOOP
+      FETCH c_exp INTO r,n;
+      EXIT WHEN c_exp%NOTFOUND;
+      DBMS_OUTPUT.PUT_LINE('Explicit: '||r||' '||n);
+    END LOOP;
+    CLOSE c_exp;
+  END;
+
+  --------------------------------------------------------------------
+  -- 3) Cursor FOR Loop
+  --------------------------------------------------------------------
+  FOR rec IN (SELECT roll_no,name FROM O_RollCall) LOOP
+    DBMS_OUTPUT.PUT_LINE('FOR Loop: '||rec.roll_no||' '||rec.name);
+  END LOOP;
+
+  --------------------------------------------------------------------
+  -- 4) Parameterized Cursor (Merging Logic)
+  --------------------------------------------------------------------
+  FOR x IN (SELECT roll_no FROM N_RollCall) LOOP
+
+    -- Fetch N_RollCall entry
+    OPEN c_merge(x.roll_no);
+    FETCH c_merge INTO v_roll, v_name, v_att;
+    CLOSE c_merge;
+
+    -- Check if exists in O_RollCall
+    SELECT COUNT(*) INTO v_cnt
+    FROM O_RollCall WHERE roll_no = v_roll;
+
+    IF v_cnt = 0 THEN
+      INSERT INTO O_RollCall VALUES(v_roll, v_name, v_att);
+      DBMS_OUTPUT.PUT_LINE('Inserted: '||v_roll);
+    ELSE
+      DBMS_OUTPUT.PUT_LINE('Skipped: '||v_roll);
+    END IF;
+
+  END LOOP;
+
+END;
+/
+
+-- FINAL OUTPUT
+SELECT * FROM O_RollCall;
+SELECT * FROM N_RollCall;

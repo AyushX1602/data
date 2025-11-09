@@ -1,0 +1,62 @@
+
+-- DBMS assignment 2A
+-- RESET OLD OBJECTS
+DROP VIEW IF EXISTS emp_view;
+DROP TABLE IF EXISTS Employee;
+
+-- 1) CREATE TABLE WITH CONSTRAINTS
+CREATE TABLE Employee (
+  emp_id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(30) NOT NULL,
+  dept VARCHAR(20),
+  salary INT CHECK (salary > 0),
+  email VARCHAR(50) UNIQUE
+);
+
+-- 2) CREATE INDEX
+CREATE INDEX idx_emp_dept ON Employee(dept);
+
+-- 3) INSERT RECORDS
+INSERT INTO Employee (name, dept, salary, email)
+VALUES 
+  ('Rohit', 'IT', 35000, 'rohit@mail.com'),
+  ('Sneha', 'HR', 42000, 'sneha@mail.com'),
+  ('Amit', 'IT', 38000, 'amit@mail.com');
+
+-- 4) CREATE VIEW
+CREATE VIEW emp_view AS
+SELECT emp_id, name, dept, salary FROM Employee;
+
+-- 5) SELECT (Simple + WHERE)
+SELECT * FROM emp_view WHERE salary > 35000;
+
+-- 6) SELECT USING UPPER / LOWER
+SELECT UPPER(name) AS NAME_UPPER, LOWER(dept) AS DEPT_LOWER
+FROM Employee;
+
+-- 7) UPDATE
+UPDATE Employee 
+SET salary = salary + 2000 
+WHERE dept = 'IT';
+
+-- 8) DELETE
+DELETE FROM Employee
+WHERE salary < 36000;
+
+-- 9) UNION
+SELECT name FROM Employee WHERE dept='IT'
+UNION
+SELECT name FROM Employee WHERE dept='HR';
+
+-- 10) MINUS equivalent (MySQL does not support MINUS)
+SELECT e1.name
+FROM Employee e1
+LEFT JOIN Employee e2
+     ON e1.name = e2.name AND e2.dept = 'IT'
+WHERE e2.name IS NULL;
+
+-- FINAL OUTPUTS
+SELECT * FROM Employee;
+SELECT * FROM emp_view;
+
+    

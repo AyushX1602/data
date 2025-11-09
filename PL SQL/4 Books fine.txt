@@ -1,0 +1,77 @@
+-- enter roll no 1  , BOOK name - DBMS
+-- enter roll no 2  , BOOK name - OS 
+
+-- RESET TABLES
+BEGIN EXECUTE IMMEDIATE 'DROP TABLE borrower_new PURGE'; EXCEPTION WHEN OTHERS THEN NULL; END;
+/
+BEGIN EXECUTE IMMEDIATE 'DROP TABLE fine_new PURGE'; EXCEPTION WHEN OTHERS THEN NULL; END;
+/
+
+-- CREATE TABLES
+CREATE TABLE borrower_new(
+  roll_no NUMBER,
+  name VARCHAR2(30),
+  date_of_issue DATE,
+  book_name VARCHAR2(50),
+  status CHAR(1)
+);
+
+CREATE TABLE fine_new(
+  roll_no NUMBER,
+  return_date DATE,
+  amount NUMBER
+);
+
+-- INSERT SAMPLE DATA
+INSERT INTO borrower_new VALUES(1,'Rohit',TO_DATE('01-11-2024','DD-MM-YYYY'),'DBMS','I');
+INSERT INTO borrower_new VALUES(2,'Sneha',TO_DATE('10-11-2024','DD-MM-YYYY'),'OS','I');
+COMMIT;
+
+-- ANONYMOUS BLOCK FOR FINE CALCULATION
+DECLARE
+  v_roll  NUMBER := &roll_no;
+  v_book  VARCHAR2(50) := '&book_name';
+  v_issue DATE;
+  v_days  NUMBER;
+  v_fine  NUMBER := 0;
+BEGIN
+  SELECT date_of_issue INTO v_issue
+  FROM (
+        SELECT date_of_issue
+        FROM borrower_new
+        WHERE roll_no = v_roll
+          AND LOWER(book_name)=LOWER(v_book)
+          AND status='I'
+        ORDER BY date_of_issue
+       )
+  WHERE ROWNUM=1;
+
+  v_days := TRUNC(SYSDATE - v_issue);
+
+  IF v_days BETWEEN 15 AND 30 THEN
+    v_fine := v_days * 5;
+  ELSIF v_days > 30 THEN
+    v_fine := (30*5) + ((v_days-30)*50);
+  END IF;
+
+  UPDATE borrower_new
+  SET status='R'
+  WHERE roll_no=v_roll AND LOWER(book_name)=LOWER(v_book);
+
+  IF v_fine > 0 THEN
+    INSERT INTO fine_new VALUES(v_roll, SYSDATE, v_fine);
+  END IF;
+
+  DBMS_OUTPUT.PUT_LINE('Book Returned.');
+  DBMS_OUTPUT.PUT_LINE('Days Overdue: '||v_days);
+  DBMS_OUTPUT.PUT_LINE('Fine Amount: '||v_fine);
+
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN DBMS_OUTPUT.PUT_LINE('No issued entry found.');
+  WHEN OTHERS THEN DBMS_OUTPUT.PUT_LINE('Error: '||SQLERRM);
+END;
+/
+
+-- VIEW UPDATED DATA
+SELECT * FROM borrower_new;
+SELECT * FROM fine_new;

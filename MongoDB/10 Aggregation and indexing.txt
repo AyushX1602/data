@@ -1,0 +1,58 @@
+
+// DBMS Assignment 11 — Aggregation and Indexing in MongoDB
+// ---------------------------------------------------------
+
+// ----------------------------
+// 1. Create a Collection
+// ----------------------------
+db.students.insertMany([
+  { roll: 1, name: "Rohit", dept: "IT", marks: 85, city: "Pune" },
+  { roll: 2, name: "Sneha", dept: "IT", marks: 72, city: "Mumbai" },
+  { roll: 3, name: "Amit",  dept: "HR", marks: 90, city: "Pune" },
+  { roll: 4, name: "Meera", dept: "Finance", marks: 60, city: "Delhi" },
+  { roll: 5, name: "Ankit", dept: "HR", marks: 55, city: "Pune" }
+]);
+
+// ----------------------------
+// 2. Create Indexes
+// ----------------------------
+
+// Single-field index (fast search by department)
+db.students.createIndex({ dept: 1 });
+
+// Compound index (fast search by dept + city)
+db.students.createIndex({ dept: 1, city: 1 });
+
+// View all existing indexes
+db.students.getIndexes();
+
+// ----------------------------
+// 3. Aggregation Examples
+// ----------------------------
+
+// A) Group by department and calculate average marks
+db.students.aggregate([
+  { $group: { _id: "$dept", avgMarks: { $avg: "$marks" } } }
+]);
+
+// B) Count students in each department
+db.students.aggregate([
+  { $group: { _id: "$dept", totalStudents: { $sum: 1 } } }
+]);
+
+// C) Filter (city = Pune) then group
+db.students.aggregate([
+  { $match: { city: "Pune" } },
+  { $group: { _id: "$dept", countPune: { $sum: 1 } } }
+]);
+
+// D) Sort by marks descending
+db.students.aggregate([
+  { $sort: { marks: -1 } }
+]);
+
+// E) Projection (select only name + marks)
+db.students.aggregate([
+  { $project: { _id: 0, name: 1, marks: 1 } }
+]);
+    

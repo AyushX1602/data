@@ -1,0 +1,82 @@
+// ----------------------------------------------------
+// 1. CREATE (INSERT)
+// ----------------------------------------------------
+db.students.insertMany([
+  { roll: 1, name: "Rohit", dept: "IT", marks: 85, city: "Pune" },
+  { roll: 2, name: "Sneha", dept: "HR", marks: 72, city: "Mumbai" },
+  { roll: 3, name: "Amit",  dept: "IT", marks: 90, city: "Delhi" },
+  { roll: 4, name: "Meera", dept: "Finance", marks: 60, city: "Pune" }
+]);
+
+db.students.insertOne({ roll: 5, name: "Ankit", dept: "HR", marks: 55, city: "Pune" });
+
+// ----------------------------------------------------
+// 2. READ (FIND)
+// ----------------------------------------------------
+
+// All records
+db.students.find();
+
+// Projection (show only name + marks)
+db.students.find({}, { _id: 0, name: 1, marks: 1 });
+
+// Logical operator: marks > 70
+db.students.find({ marks: { $gt: 70 } });
+
+// $and operator
+db.students.find({
+  $and: [
+    { dept: "IT" },
+    { marks: { $gt: 80 } }
+  ]
+});
+
+// $or operator
+db.students.find({
+  $or: [
+    { city: "Pune" },
+    { marks: { $lt: 60 } }
+  ]
+});
+
+// ----------------------------------------------------
+// 3. UPDATE
+// ----------------------------------------------------
+
+// Update one
+db.students.updateOne(
+  { roll: 1 },
+  { $set: { marks: 88 } }
+);
+
+// Update many
+db.students.updateMany(
+  { dept: "IT" },
+  { $inc: { marks: 2 } }
+);
+
+// ----------------------------------------------------
+// 4. REPLACE (Modern Alternative to save())
+// ----------------------------------------------------
+
+// Insert-like replace (if roll=6 doesn't exist, replaceOne creates new doc)
+db.students.replaceOne(
+  { roll: 6 },
+  { roll: 6, name: "Kiran", dept: "IT", marks: 77, city: "Pune" },
+  { upsert: true }
+);
+
+// ----------------------------------------------------
+// 5. DELETE
+// ----------------------------------------------------
+
+// Delete one
+db.students.deleteOne({ roll: 5 });
+
+// Delete many
+db.students.deleteMany({ dept: "HR" });
+
+// ----------------------------------------------------
+// Final Output
+// ----------------------------------------------------
+db.students.find();

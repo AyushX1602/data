@@ -1,0 +1,45 @@
+// ---------------------------------------------------------
+// SAMPLE DATA
+// ---------------------------------------------------------
+db.sales.insertMany([
+  { item: "Pen",     qty: 10, price: 5 },
+  { item: "Pen",     qty: 5,  price: 5 },
+  { item: "Pencil",  qty: 20, price: 3 },
+  { item: "Pencil",  qty: 10, price: 3 },
+  { item: "Notebook",qty: 2,  price: 30 }
+]);
+
+// ---------------------------------------------------------
+// ✅ 1. MAP-REDUCE (Deprecated but valid for DBMS practical)
+// ---------------------------------------------------------
+
+var mapFunction = function () {
+  emit(this.item, this.qty * this.price);
+};
+
+var reduceFunction = function (key, values) {
+  return Array.sum(values);
+};
+
+db.sales.mapReduce(
+  mapFunction,
+  reduceFunction,
+  { out: "sales_summary" }
+);
+
+print("Map-Reduce Output:");
+printjson(db.sales_summary.find().toArray());
+
+// ---------------------------------------------------------
+// ✅ 2. MODERN AGGREGATION PIPELINE (Recommended method)
+// ---------------------------------------------------------
+
+print("Aggregation Equivalent:");
+db.sales.aggregate([
+  {
+    $group: {
+      _id: "$item",
+      totalSales: { $sum: { $multiply: ["$qty", "$price"] } }
+    }
+  }
+]).forEach(printjson);

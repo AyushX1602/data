@@ -1,0 +1,57 @@
+-- DROP OLD TABLES (SAFE)
+BEGIN EXECUTE IMMEDIATE 'DROP TABLE Library_Audit'; EXCEPTION WHEN OTHERS THEN NULL; END;
+/
+BEGIN EXECUTE IMMEDIATE 'DROP TABLE Library'; EXCEPTION WHEN OTHERS THEN NULL; END;
+/
+
+-- CREATE TABLES
+CREATE TABLE Library (
+  book_id NUMBER,
+  book_name VARCHAR2(50),
+  author VARCHAR2(50)
+);
+
+CREATE TABLE Library_Audit (
+  action_date DATE,
+  action_type VARCHAR2(10),
+  old_book_id NUMBER,
+  old_book_name VARCHAR2(50),
+  old_author VARCHAR2(50)
+);
+
+-- SAMPLE DATA
+INSERT INTO Library VALUES (1, 'DBMS', 'Navathe');
+INSERT INTO Library VALUES (2, 'OS', 'Galvin');
+COMMIT;
+
+-- TRIGGER FOR UPDATE
+CREATE OR REPLACE TRIGGER trg_library_update
+BEFORE UPDATE ON Library
+FOR EACH ROW
+BEGIN
+  INSERT INTO Library_Audit
+  VALUES (SYSDATE, 'UPDATE', :OLD.book_id, :OLD.book_name, :OLD.author);
+END;
+/
+
+-- TRIGGER FOR DELETE
+CREATE OR REPLACE TRIGGER trg_library_delete
+BEFORE DELETE ON Library
+FOR EACH ROW
+BEGIN
+  INSERT INTO Library_Audit
+  VALUES (SYSDATE, 'DELETE', :OLD.book_id, :OLD.book_name, :OLD.author);
+END;
+/
+
+-- TEST UPDATE
+UPDATE Library SET book_name='Operating Systems' WHERE book_id=2;
+
+-- TEST DELETE
+DELETE FROM Library WHERE book_id=1;
+
+COMMIT;
+
+-- VIEW RESULTS
+SELECT * FROM Library;
+SELECT * FROM Library_Audit;

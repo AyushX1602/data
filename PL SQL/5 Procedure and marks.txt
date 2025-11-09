@@ -1,0 +1,60 @@
+
+-- DBMS ASSIGNMENT 5 — STORED PROCEDURE AND FUNCTION
+-- -------------------------------------------------
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE stud_marks PURGE';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE result PURGE';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+CREATE TABLE stud_marks(
+  name VARCHAR2(20),
+  total_marks NUMBER
+);
+
+CREATE TABLE result(
+  roll NUMBER,
+  name VARCHAR2(20),
+  class VARCHAR2(30)
+);
+CREATE OR REPLACE PROCEDURE proc_grade(
+  p_roll  IN NUMBER,
+  p_name  IN VARCHAR2,
+  p_marks IN NUMBER
+)
+IS
+  v_class VARCHAR2(30);
+BEGIN
+  IF p_marks >= 990 AND p_marks <= 1500 THEN
+    v_class := 'Distinction';
+  ELSIF p_marks >= 900 AND p_marks <= 989 THEN
+    v_class := 'First Class';
+  ELSIF p_marks >= 825 AND p_marks <= 899 THEN
+    v_class := 'Higher Second Class';
+  ELSE
+    v_class := 'Other';
+  END IF;
+
+  INSERT INTO stud_marks VALUES(p_name, p_marks);
+  INSERT INTO result     VALUES(p_roll, p_name, v_class);
+END;
+/
+BEGIN
+  proc_grade(1, 'Rahul', 940);
+  proc_grade(2, 'Sneha', 1020);
+  proc_grade(3, 'Amit', 860);
+END;
+/
+SELECT * FROM stud_marks;
+SELECT * FROM result;
+
+
+	

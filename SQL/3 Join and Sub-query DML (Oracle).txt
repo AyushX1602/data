@@ -1,0 +1,146 @@
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP VIEW stu_fee_view';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE Fees';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE Students';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TABLE Department';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END;
+/
+
+
+-- CREATE TABLES
+
+CREATE TABLE Students (
+  roll_no NUMBER,
+  name VARCHAR2(30),
+  dept_id NUMBER,
+  marks NUMBER
+);
+
+CREATE TABLE Department (
+  dept_id NUMBER,
+  dept_name VARCHAR2(30)
+);
+
+CREATE TABLE Fees (
+  roll_no NUMBER,
+  amount NUMBER
+);
+
+
+-- INSERT SAMPLE DATA
+
+INSERT INTO Students VALUES (1, 'Rohit', 10, 85);
+INSERT INTO Students VALUES (2, 'Sneha', 20, 70);
+INSERT INTO Students VALUES (3, 'Amit', 10, 90);
+
+INSERT INTO Department VALUES (10, 'Computer');
+INSERT INTO Department VALUES (20, 'Mechanical');
+
+INSERT INTO Fees VALUES (1, 5000);
+INSERT INTO Fees VALUES (3, 6000);
+
+COMMIT;
+
+
+-- 1) INNER JOIN
+
+SELECT s.roll_no, s.name, d.dept_name
+FROM Students s
+INNER JOIN Department d ON s.dept_id = d.dept_id;
+
+
+-- 2) LEFT JOIN
+
+SELECT s.name, f.amount
+FROM Students s
+LEFT JOIN Fees f ON s.roll_no = f.roll_no;
+
+-- 3) RIGHT JOIN
+
+SELECT s.name, f.amount
+FROM Students s
+RIGHT JOIN Fees f ON s.roll_no = f.roll_no;
+
+
+-- 4) FULL OUTER JOIN (Oracle supports directly)
+
+SELECT s.roll_no, f.amount
+FROM Students s
+FULL OUTER JOIN Fees f ON s.roll_no = f.roll_no;
+
+
+-- 5) SELF JOIN (Students with same dept)
+
+SELECT a.name AS S1, b.name AS S2
+FROM Students a
+JOIN Students b 
+  ON a.dept_id = b.dept_id 
+ AND a.roll_no < b.roll_no;
+
+
+-- 6) Single-row Subquery
+
+SELECT name, marks
+FROM Students
+WHERE marks > (SELECT AVG(marks) FROM Students);
+
+
+-- 7) Multi-row Subquery
+
+SELECT name
+FROM Students
+WHERE dept_id IN (
+  SELECT dept_id 
+  FROM Department 
+  WHERE dept_name LIKE 'C%'
+);
+
+
+-- 8) Correlated Subquery
+
+SELECT roll_no, name, marks
+FROM Students s
+WHERE marks = (
+  SELECT MAX(marks)
+  FROM Students
+  WHERE dept_id = s.dept_id
+);
+
+
+-- 9) Create View (NVL used in Oracle)
+
+CREATE OR REPLACE VIEW stu_fee_view AS
+SELECT 
+    s.roll_no,
+    s.name,
+    d.dept_name,
+    NVL(f.amount, 0) AS fees
+FROM Students s
+LEFT JOIN Department d ON s.dept_id = d.dept_id
+LEFT JOIN Fees f ON s.roll_no = f.roll_no;
+
+
+-- 10) Select From View
+
+SELECT * FROM stu_fee_view;
