@@ -1,0 +1,25 @@
+// Switch to CollegeDB and reset collection
+db = db.getSiblingDB("CollegeDB");
+db.students.drop();
+
+// Insert sample data
+db.students.insertMany([
+  { name: "Harshad", branch: "Comp", marks: 85 },
+  { name: "Sneha",   branch: "Comp", marks: 92 },
+  { name: "Amit",    branch: "Mech", marks: 68 },
+  { name: "Rohit",   branch: "ENTC", marks: 75 }
+]);
+
+// 1️ Aggregation method (official replacement for mapReduce)
+print("\nBranch-wise Student Count (Aggregation):");
+db.students.aggregate([
+  { $group: { _id: "$branch", count: { $sum: 1 } } }
+]).forEach(d => printjson(d));
+
+// 2️ Simulated mapReduce (for understanding concept)
+print("\nSimulated MapReduce Result:");
+let counts = {};
+db.students.find().forEach(s => {
+  counts[s.branch] = (counts[s.branch] || 0) + 1;
+});
+printjson(counts);

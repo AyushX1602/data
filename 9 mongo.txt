@@ -1,0 +1,27 @@
+db = db.getSiblingDB("CollegeDB");
+db.students.drop();
+
+db.students.insertMany([
+  { _id: 1, name: "Harshad", age: 20, branch: "Comp", marks: 85 },
+  { _id: 2, name: "Rohit", age: 21, branch: "ENTC", marks: 75 },
+  { _id: 3, name: "Sneha", age: 19, branch: "Comp", marks: 92 },
+  { _id: 4, name: "Amit", age: 22, branch: "Mech", marks: 68 }
+]);
+
+print("\nAll Students:");
+db.students.find().pretty();
+
+print("\nMarks > 80:");
+db.students.find({ marks: { $gt: 80 } }).pretty();
+
+db.students.updateOne({ name: "Amit" }, { $set: { marks: 80 } });
+db.students.deleteOne({ name: "Rohit" });
+
+print("\nComp branch & marks > 80:");
+db.students.find({ branch: "Comp", marks: { $gt: 80 } }).pretty();
+
+print("\nENTC branch OR marks < 70:");
+db.students.find({ $or: [ { branch: "ENTC" }, { marks: { $lt: 70 } } ] }).pretty();
+
+print("\nFinal Students:");
+db.students.find().pretty();

@@ -1,0 +1,33 @@
+db = db.getSiblingDB("CollegeDB");
+db.students.drop();
+
+db.students.insertMany([
+  { _id: 1, name: "Harshad", branch: "Comp", marks: 85 },
+  { _id: 2, name: "Rohit",  branch: "ENTC", marks: 75 },
+  { _id: 3, name: "Sneha",  branch: "Comp", marks: 92 },
+  { _id: 4, name: "Amit",   branch: "Mech", marks: 68 },
+  { _id: 5, name: "Priya",  branch: "Comp", marks: 88 }
+]);
+
+print("\n1) All students:");
+db.students.find().forEach(d => printjson(d));
+
+print("\n2) Avg marks per branch:");
+db.students.aggregate([
+  { $group: { _id: "$branch", avgMarks: { $avg: "$marks" } } }
+]).forEach(d => printjson(d));
+
+print("\n3) Count of students per branch with marks > 70:");
+db.students.aggregate([
+  { $match: { marks: { $gt: 70 } } },
+  { $group: { _id: "$branch", totalStudents: { $sum: 1 } } }
+]).forEach(d => printjson(d));
+
+print("\n4) Students sorted by marks (desc):");
+db.students.aggregate([{ $sort: { marks: -1 } }]).forEach(d => printjson(d));
+
+print("\n5) Create index on branch (if not exists):");
+db.students.createIndex({ branch: 1 });
+
+print("\n6) Current indexes:");
+db.students.getIndexes().forEach(i => printjson(i));
